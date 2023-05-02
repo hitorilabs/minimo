@@ -1,0 +1,2 @@
+# minimo
+tiny mocap utilities
