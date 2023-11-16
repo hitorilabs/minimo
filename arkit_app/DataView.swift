@@ -1,66 +1,71 @@
 import SwiftUI
 import ARKit
 
+@Observable class BlendShapeFeature: Identifiable {
+    var value: NSNumber = 0;
+}
+
 struct DataView: View {
-    
-    @State var blendShapes: [ARFaceAnchor.BlendShapeLocation : NSNumber] = [
-        // Eye
-        .eyeBlinkLeft: 0,       .eyeBlinkRight: 0,
-        .eyeLookUpLeft: 0,      .eyeLookUpRight: 0,
-        .eyeLookDownLeft: 0,    .eyeLookDownRight: 0,
-        .eyeLookInLeft: 0,      .eyeLookInRight: 0,
-        .eyeLookOutLeft: 0,     .eyeLookOutRight: 0,
-        .eyeSquintLeft: 0,      .eyeSquintRight: 0,
-        .eyeWideLeft: 0,        .eyeWideRight: 0,
-        
-        // Brow
-        .browInnerUp: 0,
-        .browDownLeft: 0,       .browDownRight: 0,
-        .browOuterUpLeft: 0,    .browOuterUpRight: 0,
-        
-        // Nose
-        .noseSneerLeft: 0,      .noseSneerRight: 0,
-        
-        // Cheek
-        .cheekPuff: 0,
-        .cheekSquintLeft: 0,    .cheekSquintRight:0,
-        
-        // Jaw
-        .jawForward: 0,
-        .jawOpen: 0,
-        .jawLeft: 0,            .jawRight: 0,
-        
-        // Mouth
-        .mouthClose: 0,
-        .mouthFunnel: 0,
-        .mouthPucker: 0,
-        .mouthLeft: 0,              .mouthRight: 0,
-        .mouthSmileLeft: 0,         .mouthSmileRight: 0,
-        .mouthFrownLeft: 0,         .mouthFrownRight: 0,
-        .mouthDimpleLeft: 0,        .mouthDimpleRight: 0,
-        .mouthStretchLeft: 0,       .mouthStretchRight: 0,
-        .mouthRollLower: 0,         .mouthRollUpper: 0,
-        .mouthShrugLower: 0,        .mouthShrugUpper: 0,
-        .mouthPressLeft: 0,         .mouthPressRight: 0,
-        .mouthLowerDownLeft: 0,     .mouthLowerDownRight: 0,
-        .mouthUpperUpLeft: 0,       .mouthUpperUpRight: 0,
-        
-        // Tongue
-        .tongueOut: 0,
-    ]
-    
     var arSessionManager = ARSessionManager();
+    @State private var blendShapes: [ARFaceAnchor.BlendShapeLocation: BlendShapeFeature] = Dictionary(
+        uniqueKeysWithValues: [
+            // Eye
+            .eyeBlinkLeft,       .eyeBlinkRight,
+            .eyeLookUpLeft,      .eyeLookUpRight,
+            .eyeLookDownLeft,    .eyeLookDownRight,
+            .eyeLookInLeft,      .eyeLookInRight,
+            .eyeLookOutLeft,     .eyeLookOutRight,
+            .eyeSquintLeft,      .eyeSquintRight,
+            .eyeWideLeft,        .eyeWideRight,
+            
+            // Brow
+            .browInnerUp,
+            .browDownLeft,       .browDownRight,
+            .browOuterUpLeft,    .browOuterUpRight,
+            
+            // Nose
+            .noseSneerLeft,      .noseSneerRight,
+            
+            // Cheek
+            .cheekPuff,
+            .cheekSquintLeft,    .cheekSquintRight,
+            
+            // Jaw
+            .jawForward,
+            .jawOpen,
+            .jawLeft,            .jawRight,
+            
+            // Mouth
+            .mouthClose,
+            .mouthFunnel,
+            .mouthPucker,
+            .mouthLeft,              .mouthRight,
+            .mouthSmileLeft,         .mouthSmileRight,
+            .mouthFrownLeft,         .mouthFrownRight,
+            .mouthDimpleLeft,        .mouthDimpleRight,
+            .mouthStretchLeft,       .mouthStretchRight,
+            .mouthRollLower,         .mouthRollUpper,
+            .mouthShrugLower,        .mouthShrugUpper,
+            .mouthPressLeft,         .mouthPressRight,
+            .mouthLowerDownLeft,     .mouthLowerDownRight,
+            .mouthUpperUpLeft,       .mouthUpperUpRight,
+            
+            // Tongue
+            .tongueOut,
+        ].map { (key: $0, value: BlendShapeFeature()) });
     
     var body: some View {
         VStack {
-            Text("keys: \(blendShapes.count)")
+            HStack {
+                Text("keys: \(blendShapes.count)")
+            }
             ScrollView {
                 ForEach(Array(blendShapes.keys), id: \.self) { key in
                     HStack {
                         Text("\(key.rawValue)")
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .monospaced()
-                        Text("\(String(format: "%.4f", blendShapes[key]!.floatValue))")
+                        Text("\(String(format: "%.4f", blendShapes[key]!.value.floatValue))")
                             .monospaced()
                             .frame(maxWidth: .infinity, alignment: .trailing)
                     }
@@ -72,7 +77,7 @@ struct DataView: View {
         }
         .onReceive(arSessionManager.$lastFaceAnchor) { faceAnchor in
             for (location, value) in faceAnchor?.blendShapes ?? [:] {
-                blendShapes[location] = value;
+                blendShapes[location]?.value = value;
             }
         }
     }
@@ -81,24 +86,24 @@ struct DataView: View {
 class ARSessionManager: NSObject, ARSessionDelegate {
     @Published var lastFaceAnchor: ARFaceAnchor?;
     let session = ARSession();
-
+    
     override init() {
         super.init()
         session.delegate = self
     }
-
+    
     func startFaceTracking() {
         guard ARFaceTrackingConfiguration.isSupported else {
             print("Face tracking not supported on this device")
             return
         }
-
+        
         let configuration = ARFaceTrackingConfiguration()
         
         // Configure additional settings if needed
         session.run(configuration)
     }
-
+    
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
         // Handle face tracking updates
         for anchor in anchors {
@@ -113,3 +118,4 @@ class ARSessionManager: NSObject, ARSessionDelegate {
 #Preview {
     DataView()
 }
+
